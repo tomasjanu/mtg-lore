@@ -245,6 +245,29 @@
             font-weight: 600;
         }
 
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+        }
+
+        .form-group select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
         .form-group input,
         .form-group textarea {
             width: 100%;
@@ -618,9 +641,30 @@
                            placeholder="Název příběhu (vyplní se automaticky při načtení z URL)">
                 </div>
                 <div class="form-group">
-                    <label>E-mail pro vyšší limit překladu (volitelné, zvýší denní limit z 5 000 na 50 000 znaků)</label>
-                    <input type="email" id="email-input"
-                           placeholder="vas@email.com">
+                    <label>Překladový engine</label>
+                    <select id="engine-select" onchange="onEngineChange()">
+                        <option value="openai">OpenAI (gpt-4o-mini) – nejlepší kvalita</option>
+                        <option value="mymemory">MyMemory – zdarma, nižší kvalita</option>
+                    </select>
+                </div>
+                <div id="openai-settings">
+                    <div class="form-group">
+                        <label>OpenAI API klíč</label>
+                        <input type="password" id="apikey-input"
+                               placeholder="sk-...">
+                        <small style="color:var(--text-secondary);font-size:0.8rem;">
+                            Klíč se ukládá pouze ve vašem prohlížeči (localStorage). Získejte na
+                            <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener"
+                               style="color:var(--accent-gold)">platform.openai.com/api-keys</a>
+                        </small>
+                    </div>
+                </div>
+                <div id="mymemory-settings" style="display:none">
+                    <div class="form-group">
+                        <label>E-mail pro vyšší limit překladu (volitelné, zvýší denní limit z 5 000 na 50 000 znaků)</label>
+                        <input type="email" id="email-input"
+                               placeholder="vas@email.com">
+                    </div>
                 </div>
             </div>
 
@@ -670,6 +714,8 @@
 
         const STORAGE_KEY = 'mtg-lore-articles';
         const EMAIL_KEY = 'mtg-lore-email';
+        const APIKEY_KEY = 'mtg-lore-openai-key';
+        const ENGINE_KEY = 'mtg-lore-engine';
 
         // CORS proxies to try in order
         const CORS_PROXIES = [
@@ -702,9 +748,33 @@
             localStorage.setItem(EMAIL_KEY, email);
         }
 
+        function loadApiKey() {
+            return localStorage.getItem(APIKEY_KEY) || '';
+        }
+
+        function saveApiKey(key) {
+            localStorage.setItem(APIKEY_KEY, key);
+        }
+
+        function loadEngine() {
+            return localStorage.getItem(ENGINE_KEY) || 'openai';
+        }
+
+        function saveEngine(engine) {
+            localStorage.setItem(ENGINE_KEY, engine);
+        }
+
         function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
         }
+
+        // ─── Engine selector ─────────────────────────
+        window.onEngineChange = function() {
+            const engine = document.getElementById('engine-select').value;
+            document.getElementById('openai-settings').style.display = engine === 'openai' ? 'block' : 'none';
+            document.getElementById('mymemory-settings').style.display = engine === 'mymemory' ? 'block' : 'none';
+            saveEngine(engine);
+        };
 
         // ─── View management ───────────────────────────
         window.showView = function(viewId) {
@@ -714,6 +784,10 @@
             if (viewId === 'library-view') renderLibrary();
             if (viewId === 'add-view') {
                 document.getElementById('email-input').value = loadEmail();
+                document.getElementById('apikey-input').value = loadApiKey();
+                const engine = loadEngine();
+                document.getElementById('engine-select').value = engine;
+                onEngineChange();
             }
             window.scrollTo(0, 0);
         };
@@ -1046,7 +1120,7 @@
             const originalText = document.getElementById('paste-input').value.trim();
             const title = document.getElementById('title-input').value.trim();
             const url = document.getElementById('url-input').value.trim();
-            const email = document.getElementById('email-input').value.trim();
+            const engine = document.getElementById('engine-select').value;
 
             if (!originalText) {
                 showAlert('Zadejte nebo načtěte text příběhu k překladu.');
@@ -1057,7 +1131,18 @@
                 return;
             }
 
-            if (email) saveEmail(email);
+            // Validate engine settings
+            if (engine === 'openai') {
+                const apiKey = document.getElementById('apikey-input').value.trim();
+                if (!apiKey) {
+                    showAlert('Zadejte OpenAI API klíč pro překlad.');
+                    return;
+                }
+                saveApiKey(apiKey);
+            } else {
+                const email = document.getElementById('email-input').value.trim();
+                if (email) saveEmail(email);
+            }
 
             const translateBtn = document.getElementById('translate-btn');
             const saveBtn = document.getElementById('save-original-btn');
@@ -1072,44 +1157,13 @@
             progressArea.style.display = 'block';
 
             try {
-                // Split into paragraphs for translation
-                const paragraphs = originalText.split(/\n\n+/).filter(p => p.trim());
-                const translated = [];
-                let totalChars = originalText.length;
-                let doneChars = 0;
+                let translatedContent;
 
-                for (let i = 0; i < paragraphs.length; i++) {
-                    if (translationAborted) break;
-
-                    const para = paragraphs[i].trim();
-                    if (!para) {
-                        translated.push('');
-                        continue;
-                    }
-
-                    // Separator or very short lines – keep as-is
-                    if (/^[*\-_=~#]{1,5}\s*$/.test(para) || para === '---') {
-                        translated.push(para);
-                        doneChars += para.length;
-                        continue;
-                    }
-
-                    // Translate paragraph (may need chunking if very long)
-                    const translatedPara = await translateText(para, email);
-                    translated.push(translatedPara);
-
-                    doneChars += para.length;
-                    const pct = Math.round((doneChars / totalChars) * 100);
-                    progressFill.style.width = pct + '%';
-                    progressText.textContent = `Přeloženo ${i + 1} / ${paragraphs.length} odstavců (${pct}%)`;
-
-                    // Small delay to be nice to the API
-                    if (i < paragraphs.length - 1) {
-                        await sleep(300);
-                    }
+                if (engine === 'openai') {
+                    translatedContent = await translateWithOpenAi(originalText, progressFill, progressText);
+                } else {
+                    translatedContent = await translateWithMyMemory(originalText, progressFill, progressText);
                 }
-
-                const translatedContent = translated.join('\n\n');
 
                 // Save article
                 const articles = loadArticles();
@@ -1138,14 +1192,131 @@
             }
         };
 
-        async function translateText(text, email) {
-            // Chunk long text (MyMemory limit is ~500 chars for best results)
-            const MAX_CHUNK = 480;
-            if (text.length <= MAX_CHUNK) {
-                return await callTranslateApi(text, email);
+        // ─── OpenAI Translation ──────────────────────
+        const OPENAI_SYSTEM_PROMPT = `You are a professional literary translator specializing in fantasy fiction. Translate the following English text into Czech.
+
+Rules:
+- Produce natural, fluent Czech suitable for a fantasy novel
+- Preserve the original tone, style, and voice of the author
+- Keep proper nouns (character names, place names) in their original English form unless they have an established Czech translation
+- Preserve paragraph structure exactly – each input paragraph should map to one output paragraph
+- Preserve any markdown formatting (headings starting with #, separators like ---)
+- Do NOT add any commentary, notes, or explanations – output ONLY the translated text
+- Use appropriate Czech literary register, not colloquial language`;
+
+        async function translateWithOpenAi(text, progressFill, progressText) {
+            const apiKey = document.getElementById('apikey-input').value.trim();
+
+            // Split text into batches of paragraphs (~3000 chars each for good context)
+            const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+            const MAX_BATCH_CHARS = 3000;
+            const batches = [];
+            let currentBatch = [];
+            let currentLen = 0;
+
+            for (const para of paragraphs) {
+                if (currentLen + para.length > MAX_BATCH_CHARS && currentBatch.length > 0) {
+                    batches.push(currentBatch.join('\n\n'));
+                    currentBatch = [para];
+                    currentLen = para.length;
+                } else {
+                    currentBatch.push(para);
+                    currentLen += para.length;
+                }
+            }
+            if (currentBatch.length > 0) batches.push(currentBatch.join('\n\n'));
+
+            const translatedBatches = [];
+            for (let i = 0; i < batches.length; i++) {
+                if (translationAborted) break;
+
+                const pct = Math.round(((i) / batches.length) * 100);
+                progressFill.style.width = pct + '%';
+                progressText.textContent = `Překládám část ${i + 1} / ${batches.length} (${pct}%)...`;
+
+                const translated = await callOpenAi(batches[i], apiKey);
+                translatedBatches.push(translated);
             }
 
-            // Split on sentence boundaries
+            progressFill.style.width = '100%';
+            progressText.textContent = 'Překlad dokončen!';
+            return translatedBatches.join('\n\n');
+        }
+
+        async function callOpenAi(text, apiKey) {
+            const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: OPENAI_SYSTEM_PROMPT },
+                        { role: 'user', content: text }
+                    ],
+                    temperature: 0.3
+                })
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                if (resp.status === 401) {
+                    throw new Error('Neplatný OpenAI API klíč. Zkontrolujte klíč v nastavení.');
+                }
+                if (resp.status === 429) {
+                    throw new Error('Překročen limit OpenAI API. Zkuste to za chvíli znovu.');
+                }
+                throw new Error(`OpenAI API chyba: ${err.error?.message || `HTTP ${resp.status}`}`);
+            }
+
+            const data = await resp.json();
+            const content = data.choices?.[0]?.message?.content;
+            if (!content) throw new Error('Prázdná odpověď z OpenAI.');
+            return content.trim();
+        }
+
+        // ─── MyMemory Translation ────────────────────
+        async function translateWithMyMemory(text, progressFill, progressText) {
+            const email = document.getElementById('email-input').value.trim();
+            const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+            const translated = [];
+            let totalChars = text.length;
+            let doneChars = 0;
+
+            for (let i = 0; i < paragraphs.length; i++) {
+                if (translationAborted) break;
+
+                const para = paragraphs[i].trim();
+                if (!para) { translated.push(''); continue; }
+
+                if (/^[*\-_=~#]{1,5}\s*$/.test(para) || para === '---') {
+                    translated.push(para);
+                    doneChars += para.length;
+                    continue;
+                }
+
+                const translatedPara = await translateTextMyMemory(para, email);
+                translated.push(translatedPara);
+
+                doneChars += para.length;
+                const pct = Math.round((doneChars / totalChars) * 100);
+                progressFill.style.width = pct + '%';
+                progressText.textContent = `Přeloženo ${i + 1} / ${paragraphs.length} odstavců (${pct}%)`;
+
+                if (i < paragraphs.length - 1) await sleep(300);
+            }
+
+            return translated.join('\n\n');
+        }
+
+        async function translateTextMyMemory(text, email) {
+            const MAX_CHUNK = 480;
+            if (text.length <= MAX_CHUNK) {
+                return await callMyMemoryApi(text, email);
+            }
+
             const sentences = text.match(/[^.!?]+[.!?]+\s*/g) || [text];
             const chunks = [];
             let current = '';
@@ -1162,7 +1333,7 @@
 
             const results = [];
             for (const chunk of chunks) {
-                const result = await callTranslateApi(chunk, email);
+                const result = await callMyMemoryApi(chunk, email);
                 results.push(result);
                 if (chunks.length > 1) await sleep(200);
             }
@@ -1170,25 +1341,20 @@
             return results.join(' ');
         }
 
-        async function callTranslateApi(text, email) {
-            const params = new URLSearchParams({
-                q: text,
-                langpair: 'en|cs'
-            });
+        async function callMyMemoryApi(text, email) {
+            const params = new URLSearchParams({ q: text, langpair: 'en|cs' });
             if (email) params.set('de', email);
 
             const resp = await fetch(`https://api.mymemory.translated.net/get?${params}`);
             if (!resp.ok) throw new Error(`Translation API error: HTTP ${resp.status}`);
 
             const data = await resp.json();
-
             if (data.responseStatus === 403) {
-                throw new Error('Denní limit překladu byl vyčerpán. Zkuste zadat e-mail pro vyšší limit, nebo přeložte text ručně.');
+                throw new Error('Denní limit překladu byl vyčerpán. Zkuste zadat e-mail pro vyšší limit, nebo použijte OpenAI engine.');
             }
 
             const translated = data.responseData?.translatedText;
             if (!translated) throw new Error('Prázdná odpověď z překladu.');
-
             return translated;
         }
 
