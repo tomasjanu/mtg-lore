@@ -2,9 +2,10 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <!-- MTG Lore Translator v1.0 -->
+    <!-- MTG Lore Translator v2.0 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MTG Lore – Překlad do češtiny</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
             --bg-primary: #0d0d1a;
@@ -22,11 +23,7 @@
             --shadow: rgba(0, 0, 0, 0.4);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -36,19 +33,16 @@
             line-height: 1.6;
         }
 
-        #app {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+        #app { max-width: 900px; margin: 0 auto; padding: 20px; }
 
+        /* Header */
         header {
             text-align: center;
             padding: 30px 0 20px;
             border-bottom: 2px solid var(--accent-gold-dim);
             margin-bottom: 30px;
+            position: relative;
         }
-
         header h1 {
             font-family: Georgia, 'Times New Roman', serif;
             font-size: 2.2rem;
@@ -56,11 +50,32 @@
             letter-spacing: 2px;
             text-transform: uppercase;
         }
-
         header p {
             color: var(--text-secondary);
             margin-top: 6px;
             font-size: 0.95rem;
+        }
+        .header-settings-btn {
+            position: absolute;
+            top: 30px;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .header-settings-btn:hover {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            transform: rotate(30deg);
         }
 
         /* Buttons */
@@ -75,60 +90,21 @@
             transition: all 0.2s;
             text-decoration: none;
         }
-
-        .btn-gold {
-            background: var(--accent-gold);
-            color: #1a1a2e;
-        }
-
-        .btn-gold:hover {
-            background: #d4b65c;
-            transform: translateY(-1px);
-        }
-
-        .btn-gold:disabled {
-            background: var(--accent-gold-dim);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-secondary {
-            background: var(--bg-input);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            background: #1a4a80;
-        }
-
-        .btn-danger {
-            background: var(--accent-red);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #e74c3c;
-        }
-
-        .btn-small {
-            padding: 6px 14px;
-            font-size: 0.85rem;
-        }
+        .btn-gold { background: var(--accent-gold); color: #1a1a2e; }
+        .btn-gold:hover { background: #d4b65c; transform: translateY(-1px); }
+        .btn-gold:disabled { background: var(--accent-gold-dim); cursor: not-allowed; transform: none; }
+        .btn-secondary { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: #1a4a80; }
+        .btn-danger { background: var(--accent-red); color: white; }
+        .btn-danger:hover { background: #e74c3c; }
+        .btn-small { padding: 6px 14px; font-size: 0.85rem; }
+        .btn-green { background: var(--accent-green); color: white; }
+        .btn-green:hover { background: #2ecc71; }
 
         /* Toolbar */
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .toolbar h2 {
-            font-family: Georgia, serif;
-            color: var(--accent-gold);
-            font-size: 1.4rem;
-        }
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .toolbar h2 { font-family: Georgia, serif; color: var(--accent-gold); font-size: 1.4rem; }
+        .toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
         /* Article cards */
         .article-card {
@@ -143,440 +119,114 @@
             justify-content: space-between;
             align-items: center;
         }
+        .article-card:hover { border-color: var(--accent-gold-dim); transform: translateX(4px); box-shadow: 0 2px 12px var(--shadow); }
+        .article-card-info { flex: 1; min-width: 0; }
+        .article-card-title { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .article-card-meta { font-size: 0.82rem; color: var(--text-secondary); }
+        .article-card-actions { display: flex; gap: 8px; margin-left: 12px; flex-shrink: 0; }
 
-        .article-card:hover {
-            border-color: var(--accent-gold-dim);
-            transform: translateX(4px);
-            box-shadow: 0 2px 12px var(--shadow);
-        }
-
-        .article-card-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .article-card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .article-card-meta {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-        }
-
-        .article-card-actions {
-            display: flex;
-            gap: 8px;
-            margin-left: 12px;
-            flex-shrink: 0;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .status-translated {
-            background: var(--accent-green);
-            color: white;
-        }
-
-        .status-original {
-            background: var(--accent-gold-dim);
-            color: var(--text-primary);
-        }
-
-        .status-translating {
-            background: var(--accent-purple);
-            color: white;
-        }
+        .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .status-translated { background: var(--accent-green); color: white; }
+        .status-original { background: var(--accent-gold-dim); color: var(--text-primary); }
 
         /* Empty state */
-        #empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-
-        #empty-state .icon {
-            font-size: 3rem;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        #empty-state p {
-            margin-bottom: 20px;
-            font-size: 1.05rem;
-        }
+        #empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        #empty-state .icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+        #empty-state p { margin-bottom: 20px; font-size: 1.05rem; }
 
         /* Form */
-        .form-section {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 24px;
-            margin-bottom: 20px;
+        .form-section { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 20px; }
+        .form-section h3 { color: var(--accent-gold); margin-bottom: 16px; font-family: Georgia, serif; }
+        .form-group { margin-bottom: 18px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 6px;
+            background: var(--bg-input); color: var(--text-primary); font-size: 0.95rem;
+            font-family: inherit; transition: border-color 0.2s;
         }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: var(--accent-gold); }
+        .form-group textarea { min-height: 150px; resize: vertical; }
+        .form-group select { cursor: pointer; }
+        .form-group select option { background: var(--bg-secondary); color: var(--text-primary); }
+        .form-group small { display: block; margin-top: 6px; color: var(--text-secondary); font-size: 0.8rem; line-height: 1.4; }
+        .form-group small a { color: var(--accent-gold); }
 
-        .form-section h3 {
-            color: var(--accent-gold);
-            margin-bottom: 16px;
-            font-family: Georgia, serif;
-        }
+        .form-row { display: flex; gap: 10px; align-items: flex-end; }
+        .form-row .form-group { flex: 1; }
+        .form-row .btn { margin-bottom: 18px; white-space: nowrap; }
 
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .form-group select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            background: var(--bg-input);
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-family: inherit;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--accent-gold);
-        }
-
-        .form-group select option {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            background: var(--bg-input);
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--accent-gold);
-        }
-
-        .form-group textarea {
-            min-height: 150px;
-            resize: vertical;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-        }
-
-        .form-row .form-group {
-            flex: 1;
-        }
-
-        .form-row .btn {
-            margin-bottom: 18px;
-            white-space: nowrap;
-        }
-
-        .separator {
-            text-align: center;
-            color: var(--text-secondary);
-            margin: 20px 0;
-            font-size: 0.9rem;
-            position: relative;
-        }
-
-        .separator::before,
-        .separator::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 40%;
-            height: 1px;
-            background: var(--border);
-        }
-
+        .separator { text-align: center; color: var(--text-secondary); margin: 20px 0; font-size: 0.9rem; position: relative; }
+        .separator::before, .separator::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: var(--border); }
         .separator::before { left: 0; }
         .separator::after { right: 0; }
 
         /* Progress */
-        .progress-area {
-            margin: 20px 0;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: var(--bg-primary);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-purple), var(--accent-gold));
-            border-radius: 4px;
-            transition: width 0.3s;
-            width: 0%;
-        }
-
-        .progress-text {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
+        .progress-area { margin: 20px 0; }
+        .progress-bar { width: 100%; height: 8px; background: var(--bg-primary); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent-purple), var(--accent-gold)); border-radius: 4px; transition: width 0.3s; width: 0%; }
+        .progress-text { font-size: 0.85rem; color: var(--text-secondary); }
 
         /* Preview */
-        .preview-box {
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 16px;
-            margin-top: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            color: var(--text-secondary);
-        }
+        .preview-box { background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-top: 12px; max-height: 200px; overflow-y: auto; font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary); }
 
         /* Read view */
-        .read-header {
-            margin-bottom: 24px;
-        }
+        .read-header { margin-bottom: 24px; }
+        .read-header h2 { font-family: Georgia, serif; font-size: 1.8rem; color: var(--accent-gold); margin: 16px 0 8px; line-height: 1.3; }
+        .read-meta { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px; }
+        .read-meta a { color: var(--accent-gold-dim); text-decoration: none; }
+        .read-meta a:hover { color: var(--accent-gold); text-decoration: underline; }
+        .toggle-group { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 24px; width: fit-content; }
+        .toggle-btn { padding: 8px 20px; background: var(--bg-card); color: var(--text-secondary); border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
+        .toggle-btn.active { background: var(--accent-gold); color: #1a1a2e; }
+        .toggle-btn:not(.active):hover { background: var(--bg-input); }
+        .read-content { font-family: Georgia, 'Times New Roman', serif; font-size: 1.1rem; line-height: 1.8; color: var(--text-primary); }
+        .read-content p { margin-bottom: 1.2em; text-align: justify; }
+        .read-content h1, .read-content h2, .read-content h3 { font-family: Georgia, serif; color: var(--accent-gold); margin: 1.5em 0 0.6em; }
+        .read-content em { color: #d4c5a0; }
+        .read-content hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+        .translate-fallback { margin-top: 16px; padding: 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary); }
+        .translate-fallback a { color: var(--accent-gold); }
 
-        .read-header h2 {
-            font-family: Georgia, serif;
-            font-size: 1.8rem;
-            color: var(--accent-gold);
-            margin: 16px 0 8px;
-            line-height: 1.3;
-        }
-
-        .read-meta {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-bottom: 16px;
-        }
-
-        .read-meta a {
-            color: var(--accent-gold-dim);
-            text-decoration: none;
-        }
-
-        .read-meta a:hover {
-            color: var(--accent-gold);
-            text-decoration: underline;
-        }
-
-        .toggle-group {
-            display: flex;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            overflow: hidden;
-            margin-bottom: 24px;
-            width: fit-content;
-        }
-
-        .toggle-btn {
-            padding: 8px 20px;
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .toggle-btn.active {
-            background: var(--accent-gold);
-            color: #1a1a2e;
-        }
-
-        .toggle-btn:not(.active):hover {
-            background: var(--bg-input);
-        }
-
-        .read-content {
-            font-family: Georgia, 'Times New Roman', serif;
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: var(--text-primary);
-        }
-
-        .read-content p {
-            margin-bottom: 1.2em;
-            text-align: justify;
-        }
-
-        .read-content h1,
-        .read-content h2,
-        .read-content h3 {
-            font-family: Georgia, serif;
-            color: var(--accent-gold);
-            margin: 1.5em 0 0.6em;
-        }
-
-        .read-content em {
-            color: #d4c5a0;
-        }
-
-        .read-content hr {
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 2em 0;
-        }
-
-        /* Alert / notification */
-        .alert {
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            font-size: 0.9rem;
-        }
-
-        .alert-error {
-            background: rgba(192, 57, 43, 0.2);
-            border: 1px solid var(--accent-red);
-            color: #e74c3c;
-        }
-
-        .alert-info {
-            background: rgba(123, 45, 142, 0.15);
-            border: 1px solid var(--accent-purple);
-            color: #bb86fc;
-        }
-
-        .alert-success {
-            background: rgba(39, 174, 96, 0.15);
-            border: 1px solid var(--accent-green);
-            color: #2ecc71;
-        }
+        /* Alert */
+        .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 0.9rem; }
+        .alert-error { background: rgba(192, 57, 43, 0.2); border: 1px solid var(--accent-red); color: #e74c3c; }
+        .alert-info { background: rgba(123, 45, 142, 0.15); border: 1px solid var(--accent-purple); color: #bb86fc; }
+        .alert-success { background: rgba(39, 174, 96, 0.15); border: 1px solid var(--accent-green); color: #2ecc71; }
 
         /* Sections */
-        section {
-            display: none;
-        }
+        section { display: none; }
+        section.active { display: block; }
 
-        section.active {
-            display: block;
-        }
+        /* Drive status */
+        .drive-status { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; margin-top: 12px; }
+        .drive-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .drive-status-dot.connected { background: var(--accent-green); }
+        .drive-status-dot.disconnected { background: var(--accent-red); }
+        .drive-status-text { font-size: 0.85rem; color: var(--text-secondary); flex: 1; }
+        .drive-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
-        /* Settings row */
-        .settings-row {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+        /* Setup instructions */
+        .setup-steps { margin-top: 12px; padding: 16px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+        .setup-steps ol { padding-left: 20px; }
+        .setup-steps li { margin-bottom: 6px; }
+        .setup-steps code { background: var(--bg-card); padding: 1px 6px; border-radius: 3px; color: var(--accent-gold); font-size: 0.82rem; }
+        .setup-steps a { color: var(--accent-gold); }
 
-        .settings-row .form-group {
-            margin-bottom: 0;
-            flex: 1;
-            min-width: 200px;
-        }
-
-        /* Google Translate link */
-        .translate-fallback {
-            margin-top: 16px;
-            padding: 12px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .translate-fallback a {
-            color: var(--accent-gold);
-        }
+        /* Spinner */
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--text-secondary); border-top-color: var(--accent-gold); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Responsive */
         @media (max-width: 600px) {
             #app { padding: 12px; }
             header h1 { font-size: 1.5rem; }
+            .header-settings-btn { top: 20px; width: 36px; height: 36px; font-size: 1.1rem; }
             .form-row { flex-direction: column; }
             .form-row .btn { margin-bottom: 0; }
             .article-card { flex-direction: column; align-items: flex-start; }
             .article-card-actions { margin-left: 0; margin-top: 10px; }
             .read-content { font-size: 1rem; }
-        }
-
-        /* Loading spinner */
-        .spinner {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--text-secondary);
-            border-top-color: var(--accent-gold);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 6px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Confirm dialog */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-
-        .modal-box {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 24px;
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .modal-box p {
-            margin-bottom: 20px;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
         }
     </style>
 </head>
@@ -585,6 +235,7 @@
         <header>
             <h1>MTG Lore Translator</h1>
             <p>Magic: The Gathering – příběhy v češtině</p>
+            <button class="header-settings-btn" onclick="showView('settings-view')" title="Nastavení">&#9881;</button>
         </header>
 
         <div id="alert-area"></div>
@@ -593,14 +244,86 @@
         <section id="library-view" class="active">
             <div class="toolbar">
                 <h2>Knihovna příběhů</h2>
-                <button class="btn btn-gold" onclick="showView('add-view')">+ Přidat příběh</button>
+                <div class="toolbar-actions">
+                    <button class="btn btn-secondary btn-small" id="drive-sync-btn" onclick="syncDriveFromLibrary()" style="display:none" title="Synchronizovat s Google Drive">&#9729; Drive sync</button>
+                    <button class="btn btn-gold" onclick="showView('add-view')">+ Přidat příběh</button>
+                </div>
             </div>
             <div id="article-list"></div>
             <div id="empty-state">
-                <div class="icon">📜</div>
+                <div class="icon">&#128220;</div>
                 <p>Zatím nemáte žádné příběhy.<br>Přidejte svůj první MTG příběh k přečtení v češtině.</p>
                 <button class="btn btn-gold" onclick="showView('add-view')">+ Přidat příběh</button>
             </div>
+        </section>
+
+        <!-- Settings View -->
+        <section id="settings-view">
+            <div class="toolbar">
+                <h2>Nastavení</h2>
+                <button class="btn btn-secondary btn-small" onclick="showView('library-view')">Zpět</button>
+            </div>
+
+            <div class="form-section">
+                <h3>Překladový engine</h3>
+                <div class="form-group">
+                    <label>Engine</label>
+                    <select id="engine-select" onchange="onEngineChange()">
+                        <option value="openai">OpenAI (gpt-4o-mini) – nejlepší kvalita</option>
+                        <option value="mymemory">MyMemory – zdarma, nižší kvalita</option>
+                    </select>
+                </div>
+                <div id="openai-settings">
+                    <div class="form-group">
+                        <label>OpenAI API klíč</label>
+                        <input type="password" id="apikey-input" placeholder="sk-...">
+                        <small>
+                            Klíč se ukládá pouze ve vašem prohlížeči (localStorage).
+                            Získejte na <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>
+                        </small>
+                    </div>
+                </div>
+                <div id="mymemory-settings" style="display:none">
+                    <div class="form-group">
+                        <label>E-mail pro vyšší limit (volitelné)</label>
+                        <input type="email" id="email-input" placeholder="vas@email.com">
+                        <small>Zvýší denní limit z 5 000 na 50 000 znaků.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Google Drive</h3>
+                <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:14px;">
+                    Ukládejte přeložené příběhy na Google Drive. Aplikace má přístup pouze ke své vlastní složce.
+                </p>
+                <div class="form-group">
+                    <label>Google OAuth Client ID</label>
+                    <input type="text" id="google-client-id-input" placeholder="123456789-xxxxxxxxx.apps.googleusercontent.com">
+                </div>
+                <div class="drive-status" id="drive-status">
+                    <div class="drive-status-dot disconnected" id="drive-status-dot"></div>
+                    <span class="drive-status-text" id="drive-status-text">Nepřipojeno</span>
+                </div>
+                <div class="drive-actions">
+                    <button class="btn btn-green btn-small" id="drive-connect-btn" onclick="connectDrive()">Připojit Google Drive</button>
+                    <button class="btn btn-secondary btn-small" id="drive-disconnect-btn" onclick="disconnectDrive()" style="display:none">Odpojit</button>
+                </div>
+                <div class="setup-steps">
+                    <strong>Jak získat Client ID:</strong>
+                    <ol>
+                        <li>Jděte na <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console &rarr; Credentials</a></li>
+                        <li>Vytvořte nový projekt (nebo vyberte existující)</li>
+                        <li>Zapněte <strong>Google Drive API</strong> v <a href="https://console.cloud.google.com/apis/library/drive.googleapis.com" target="_blank" rel="noopener">API Library</a></li>
+                        <li>V sekci <strong>OAuth consent screen</strong> nastavte typ "External" a přidejte svůj email jako test uživatele</li>
+                        <li>Vytvořte <strong>OAuth 2.0 Client ID</strong> typu "Web application"</li>
+                        <li>Přidejte do <strong>Authorized JavaScript origins</strong>: <code>https://tomasjanu.github.io</code></li>
+                        <li>Zkopírujte Client ID a vložte sem</li>
+                    </ol>
+                </div>
+            </div>
+
+            <button class="btn btn-gold" onclick="saveSettings()">Uložit nastavení</button>
         </section>
 
         <!-- Add Article View -->
@@ -615,8 +338,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>URL příběhu z magic.wizards.com</label>
-                        <input type="url" id="url-input"
-                               placeholder="https://magic.wizards.com/en/news/magic-story/...">
+                        <input type="url" id="url-input" placeholder="https://magic.wizards.com/en/news/magic-story/...">
                     </div>
                     <button class="btn btn-secondary" id="fetch-btn" onclick="fetchArticle()">Načíst</button>
                 </div>
@@ -628,43 +350,14 @@
                 <h3>Možnost 2: Vložit text ručně</h3>
                 <div class="form-group">
                     <label>Zkopírujte a vložte anglický text příběhu</label>
-                    <textarea id="paste-input"
-                              placeholder="Vložte sem anglický text příběhu z webu..."></textarea>
+                    <textarea id="paste-input" placeholder="Vložte sem anglický text příběhu z webu..."></textarea>
                 </div>
             </div>
 
             <div class="form-section">
-                <h3>Nastavení</h3>
                 <div class="form-group">
                     <label>Název příběhu</label>
-                    <input type="text" id="title-input"
-                           placeholder="Název příběhu (vyplní se automaticky při načtení z URL)">
-                </div>
-                <div class="form-group">
-                    <label>Překladový engine</label>
-                    <select id="engine-select" onchange="onEngineChange()">
-                        <option value="openai">OpenAI (gpt-4o-mini) – nejlepší kvalita</option>
-                        <option value="mymemory">MyMemory – zdarma, nižší kvalita</option>
-                    </select>
-                </div>
-                <div id="openai-settings">
-                    <div class="form-group">
-                        <label>OpenAI API klíč</label>
-                        <input type="password" id="apikey-input"
-                               placeholder="sk-...">
-                        <small style="color:var(--text-secondary);font-size:0.8rem;">
-                            Klíč se ukládá pouze ve vašem prohlížeči (localStorage). Získejte na
-                            <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener"
-                               style="color:var(--accent-gold)">platform.openai.com/api-keys</a>
-                        </small>
-                    </div>
-                </div>
-                <div id="mymemory-settings" style="display:none">
-                    <div class="form-group">
-                        <label>E-mail pro vyšší limit překladu (volitelné, zvýší denní limit z 5 000 na 50 000 znaků)</label>
-                        <input type="email" id="email-input"
-                               placeholder="vas@email.com">
-                    </div>
+                    <input type="text" id="title-input" placeholder="Název příběhu (vyplní se automaticky při načtení z URL)">
                 </div>
             </div>
 
@@ -689,7 +382,7 @@
         <!-- Read View -->
         <section id="read-view">
             <div class="read-header">
-                <button class="btn btn-secondary btn-small" onclick="showView('library-view')">← Zpět do knihovny</button>
+                <button class="btn btn-secondary btn-small" onclick="showView('library-view')">&#8592; Zpět do knihovny</button>
                 <h2 id="read-title"></h2>
                 <div class="read-meta" id="read-meta"></div>
             </div>
@@ -701,9 +394,7 @@
             <div class="translate-fallback" id="translate-fallback" style="display:none">
                 <strong>Článek nebyl přeložen.</strong>
                 Můžete jej přeložit přímo:
-                <a id="google-translate-link" href="#" target="_blank" rel="noopener">
-                    Otevřít v Google Translate
-                </a>
+                <a id="google-translate-link" href="#" target="_blank" rel="noopener">Otevřít v Google Translate</a>
             </div>
         </section>
     </div>
@@ -712,12 +403,10 @@
     (function() {
         'use strict';
 
+        // ─── Constants ───────────────────────────────
         const STORAGE_KEY = 'mtg-lore-articles';
-        const EMAIL_KEY = 'mtg-lore-email';
-        const APIKEY_KEY = 'mtg-lore-openai-key';
-        const ENGINE_KEY = 'mtg-lore-engine';
+        const SETTINGS_KEY = 'mtg-lore-settings';
 
-        // CORS proxies to try in order
         const CORS_PROXIES = [
             url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
             url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
@@ -727,75 +416,88 @@
         let currentReadId = null;
         let translationAborted = false;
 
-        // ─── Storage ───────────────────────────────────
+        // Google Drive state (in-memory only)
+        let driveAccessToken = null;
+        let driveFolderId = null;
+
+        // ─── Settings storage ────────────────────────
+        function loadSettings() {
+            try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }
+            catch { return {}; }
+        }
+
+        function saveSettingsObj(obj) {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj));
+        }
+
+        function getSetting(key, fallback) {
+            return loadSettings()[key] ?? fallback;
+        }
+
+        function setSetting(key, value) {
+            const s = loadSettings();
+            s[key] = value;
+            saveSettingsObj(s);
+        }
+
+        // ─── Articles storage ────────────────────────
         function loadArticles() {
-            try {
-                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-            } catch {
-                return [];
-            }
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+            catch { return []; }
         }
 
         function saveArticles(articles) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(articles));
         }
 
-        function loadEmail() {
-            return localStorage.getItem(EMAIL_KEY) || '';
-        }
-
-        function saveEmail(email) {
-            localStorage.setItem(EMAIL_KEY, email);
-        }
-
-        function loadApiKey() {
-            return localStorage.getItem(APIKEY_KEY) || '';
-        }
-
-        function saveApiKey(key) {
-            localStorage.setItem(APIKEY_KEY, key);
-        }
-
-        function loadEngine() {
-            return localStorage.getItem(ENGINE_KEY) || 'openai';
-        }
-
-        function saveEngine(engine) {
-            localStorage.setItem(ENGINE_KEY, engine);
-        }
-
         function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
         }
 
-        // ─── Engine selector ─────────────────────────
-        window.onEngineChange = function() {
-            const engine = document.getElementById('engine-select').value;
-            document.getElementById('openai-settings').style.display = engine === 'openai' ? 'block' : 'none';
-            document.getElementById('mymemory-settings').style.display = engine === 'mymemory' ? 'block' : 'none';
-            saveEngine(engine);
-        };
-
-        // ─── View management ───────────────────────────
+        // ─── View management ─────────────────────────
         window.showView = function(viewId) {
             document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
             clearAlert();
-            if (viewId === 'library-view') renderLibrary();
-            if (viewId === 'add-view') {
-                document.getElementById('email-input').value = loadEmail();
-                document.getElementById('apikey-input').value = loadApiKey();
-                const engine = loadEngine();
-                document.getElementById('engine-select').value = engine;
-                onEngineChange();
+
+            if (viewId === 'library-view') {
+                renderLibrary();
+                // Show Drive sync button if connected
+                document.getElementById('drive-sync-btn').style.display = driveAccessToken ? 'inline-block' : 'none';
+            }
+            if (viewId === 'settings-view') {
+                loadSettingsIntoForm();
             }
             window.scrollTo(0, 0);
         };
 
-        // ─── Alert messages ────────────────────────────
+        // ─── Settings form ──────────────────────────
+        function loadSettingsIntoForm() {
+            document.getElementById('engine-select').value = getSetting('engine', 'openai');
+            document.getElementById('apikey-input').value = getSetting('openai-key', '');
+            document.getElementById('email-input').value = getSetting('mymemory-email', '');
+            document.getElementById('google-client-id-input').value = getSetting('google-client-id', '');
+            onEngineChange();
+            updateDriveStatusUI();
+        }
+
+        window.onEngineChange = function() {
+            const engine = document.getElementById('engine-select').value;
+            document.getElementById('openai-settings').style.display = engine === 'openai' ? 'block' : 'none';
+            document.getElementById('mymemory-settings').style.display = engine === 'mymemory' ? 'block' : 'none';
+        };
+
+        window.saveSettings = function() {
+            setSetting('engine', document.getElementById('engine-select').value);
+            setSetting('openai-key', document.getElementById('apikey-input').value.trim());
+            setSetting('mymemory-email', document.getElementById('email-input').value.trim());
+            setSetting('google-client-id', document.getElementById('google-client-id-input').value.trim());
+            showAlert('Nastavení uloženo.', 'success');
+        };
+
+        // ─── Alert messages ─────────────────────────
         function showAlert(msg, type = 'error') {
-            const area = document.getElementById('alert-area');
-            area.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+            document.getElementById('alert-area').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
             window.scrollTo(0, 0);
         }
 
@@ -803,7 +505,7 @@
             document.getElementById('alert-area').innerHTML = '';
         }
 
-        // ─── Library rendering ─────────────────────────
+        // ─── Library rendering ──────────────────────
         function renderLibrary() {
             const articles = loadArticles();
             const listEl = document.getElementById('article-list');
@@ -834,12 +536,11 @@
                                 `<button class="btn btn-gold btn-small" onclick="event.stopPropagation(); retranslateArticle('${a.id}')">Přeložit</button>` : ''}
                             <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteArticle('${a.id}')">Smazat</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
         }
 
-        // ─── Open article for reading ──────────────────
+        // ─── Open article for reading ───────────────
         window.openArticle = function(id) {
             const articles = loadArticles();
             const article = articles.find(a => a.id === id);
@@ -855,7 +556,6 @@
             }
             document.getElementById('read-meta').innerHTML = metaHtml;
 
-            // Set up language toggle
             const langToggle = document.getElementById('lang-toggle');
             const fallback = document.getElementById('translate-fallback');
 
@@ -866,13 +566,11 @@
             } else {
                 langToggle.style.display = 'none';
                 showReadContent(article.originalContent);
-                // Show Google Translate fallback
+                fallback.style.display = 'block';
                 if (article.url) {
-                    fallback.style.display = 'block';
                     document.getElementById('google-translate-link').href =
                         `https://translate.google.com/translate?sl=en&tl=cs&u=${encodeURIComponent(article.url)}`;
                 } else {
-                    fallback.style.display = 'block';
                     document.getElementById('google-translate-link').href =
                         `https://translate.google.com/?sl=en&tl=cs&text=${encodeURIComponent(article.originalContent.slice(0, 5000))}`;
                 }
@@ -885,66 +583,45 @@
             const articles = loadArticles();
             const article = articles.find(a => a.id === currentReadId);
             if (!article) return;
-
-            document.querySelectorAll('.toggle-btn').forEach(b => {
-                b.classList.toggle('active', b.dataset.lang === lang);
-            });
-
-            const content = lang === 'cs' ? article.translatedContent : article.originalContent;
-            showReadContent(content);
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+            showReadContent(lang === 'cs' ? article.translatedContent : article.originalContent);
         };
 
         function showReadContent(text) {
             const el = document.getElementById('read-content');
-            // Convert text to paragraphs
             const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
             el.innerHTML = paragraphs.map(p => {
                 const trimmed = p.trim();
-                // Detect separator lines
-                if (/^[*\-_=~]{3,}$/.test(trimmed)) {
-                    return '<hr>';
-                }
-                // Detect headings
-                if (trimmed.startsWith('# ')) {
-                    return `<h2>${escapeHtml(trimmed.slice(2))}</h2>`;
-                }
+                if (/^[*\-_=~]{3,}$/.test(trimmed)) return '<hr>';
+                if (trimmed.startsWith('# ')) return `<h2>${escapeHtml(trimmed.slice(2))}</h2>`;
                 return `<p>${escapeHtml(trimmed)}</p>`;
             }).join('');
         }
 
-        // ─── Delete article ────────────────────────────
+        // ─── Delete article ─────────────────────────
         window.deleteArticle = function(id) {
             if (!confirm('Opravdu chcete smazat tento příběh?')) return;
-            const articles = loadArticles().filter(a => a.id !== id);
-            saveArticles(articles);
+            saveArticles(loadArticles().filter(a => a.id !== id));
             renderLibrary();
         };
 
-        // ─── Retranslate from library ──────────────────
-        window.retranslateArticle = async function(id) {
+        // ─── Retranslate from library ───────────────
+        window.retranslateArticle = function(id) {
             const articles = loadArticles();
             const article = articles.find(a => a.id === id);
             if (!article) return;
-
-            // Prefill the add view
             document.getElementById('title-input').value = article.title;
             document.getElementById('paste-input').value = article.originalContent;
             document.getElementById('url-input').value = article.url || '';
             showView('add-view');
             showAlert('Obsah načten – klikněte na "Přeložit a uložit" pro překlad.', 'info');
-
-            // Remove old entry so the translate function creates a new one
-            const remaining = articles.filter(a => a.id !== id);
-            saveArticles(remaining);
+            saveArticles(articles.filter(a => a.id !== id));
         };
 
-        // ─── Fetch article from URL ────────────────────
+        // ─── Fetch article from URL ─────────────────
         window.fetchArticle = async function() {
             const url = document.getElementById('url-input').value.trim();
-            if (!url) {
-                showAlert('Zadejte URL příběhu.');
-                return;
-            }
+            if (!url) { showAlert('Zadejte URL příběhu.'); return; }
 
             const fetchBtn = document.getElementById('fetch-btn');
             fetchBtn.disabled = true;
@@ -954,20 +631,12 @@
             try {
                 const html = await fetchWithProxy(url);
                 const { title, content } = parseArticleHtml(html, url);
-
-                if (!content || content.length < 50) {
-                    throw new Error('Nepodařilo se extrahovat obsah článku. Zkuste vložit text ručně (Možnost 2).');
-                }
+                if (!content || content.length < 50) throw new Error('Nepodařilo se extrahovat obsah článku. Zkuste vložit text ručně (Možnost 2).');
 
                 document.getElementById('title-input').value = title || '';
                 document.getElementById('paste-input').value = content;
-
-                // Show preview
-                const previewArea = document.getElementById('preview-area');
-                const previewContent = document.getElementById('preview-content');
-                previewArea.style.display = 'block';
-                previewContent.textContent = content.slice(0, 1000) + (content.length > 1000 ? '...' : '');
-
+                document.getElementById('preview-area').style.display = 'block';
+                document.getElementById('preview-content').textContent = content.slice(0, 1000) + (content.length > 1000 ? '...' : '');
                 showAlert(`Obsah úspěšně načten (${content.length} znaků). Zkontrolujte náhled a klikněte na "Přeložit a uložit".`, 'success');
             } catch (err) {
                 showAlert(`Chyba při načítání: ${err.message}`);
@@ -981,167 +650,84 @@
             let lastError;
             for (const makeProxy of CORS_PROXIES) {
                 try {
-                    const proxyUrl = makeProxy(url);
-                    const resp = await fetch(proxyUrl, {
-                        headers: { 'Accept': 'text/html' }
-                    });
+                    const resp = await fetch(makeProxy(url), { headers: { 'Accept': 'text/html' } });
                     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                     return await resp.text();
-                } catch (err) {
-                    lastError = err;
-                }
+                } catch (err) { lastError = err; }
             }
-            throw new Error(
-                'Všechny CORS proxy selhaly. Zkuste zkopírovat text příběhu ručně z prohlížeče ' +
-                'a vložit jej do pole "Možnost 2". ' +
-                `(Poslední chyba: ${lastError.message})`
-            );
+            throw new Error('Všechny CORS proxy selhaly. Zkuste zkopírovat text příběhu ručně z prohlížeče a vložit jej do pole "Možnost 2". (Poslední chyba: ' + lastError.message + ')');
         }
 
         function parseArticleHtml(html, url) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            let title = '';
-            let content = '';
+            let title = '', content = '';
 
-            // Remove unwanted elements
-            doc.querySelectorAll('script, style, nav, footer, aside, iframe, .ad, [role="navigation"]')
-                .forEach(el => el.remove());
+            doc.querySelectorAll('script, style, nav, footer, aside, iframe, .ad, [role="navigation"]').forEach(el => el.remove());
 
-            // Try new MTG site structure
             const articleBody = doc.querySelector('#article-body');
             if (articleBody) {
-                // Remove sidebar elements
                 articleBody.querySelectorAll('aside, div[class*="sidebar"]').forEach(el => el.remove());
-
-                const headerEl = articleBody.querySelector('article header h1') ||
-                                  articleBody.querySelector('h1');
+                const headerEl = articleBody.querySelector('article header h1') || articleBody.querySelector('h1');
                 if (headerEl) title = headerEl.textContent.trim();
-
-                const articleEl = articleBody.querySelector('article') || articleBody;
-                content = extractTextContent(articleEl);
+                content = extractTextContent(articleBody.querySelector('article') || articleBody);
             }
 
-            // Try old structure
             if (!content || content.length < 100) {
                 const mainContent = doc.querySelector('#main-content');
                 if (mainContent) {
                     const titleEl = mainContent.querySelector('h1');
                     if (titleEl) title = titleEl.textContent.trim();
-
-                    const articleEl = mainContent.querySelector('article') || mainContent;
-                    content = extractTextContent(articleEl);
+                    content = extractTextContent(mainContent.querySelector('article') || mainContent);
                 }
             }
 
-            // Generic fallback
             if (!content || content.length < 100) {
-                const candidates = [
-                    doc.querySelector('article'),
-                    doc.querySelector('[role="main"]'),
-                    doc.querySelector('main'),
-                    doc.querySelector('.article-content'),
-                    doc.querySelector('.story-content'),
-                    doc.querySelector('.entry-content'),
-                    doc.querySelector('.post-content')
-                ].filter(Boolean);
-
-                for (const el of candidates) {
+                for (const el of [doc.querySelector('article'), doc.querySelector('[role="main"]'), doc.querySelector('main'), doc.querySelector('.article-content'), doc.querySelector('.story-content'), doc.querySelector('.entry-content')].filter(Boolean)) {
                     const text = extractTextContent(el);
-                    if (text.length > (content?.length || 0)) {
-                        content = text;
-                    }
+                    if (text.length > (content?.length || 0)) content = text;
                 }
-
-                if (!title) {
-                    const titleEl = doc.querySelector('h1') || doc.querySelector('title');
-                    if (titleEl) title = titleEl.textContent.trim();
-                }
+                if (!title) { const t = doc.querySelector('h1') || doc.querySelector('title'); if (t) title = t.textContent.trim(); }
             }
 
-            // Last resort: get title from URL
-            if (!title) {
-                title = url.split('/').pop().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            }
-
+            if (!title) title = url.split('/').pop().replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             return { title, content: content?.trim() || '' };
         }
 
         function extractTextContent(element) {
             if (!element) return '';
             const blocks = [];
-            const blockTags = new Set(['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'DIV', 'SECTION']);
-
+            const blockTags = new Set(['P','H1','H2','H3','H4','H5','H6','LI','BLOCKQUOTE','DIV','SECTION']);
             function walk(node) {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    const text = node.textContent.trim();
-                    if (text) blocks.push(text);
-                    return;
-                }
+                if (node.nodeType === Node.TEXT_NODE) { const t = node.textContent.trim(); if (t) blocks.push(t); return; }
                 if (node.nodeType !== Node.ELEMENT_NODE) return;
-
                 const tag = node.tagName;
-                // Skip unwanted tags
-                if (['SCRIPT', 'STYLE', 'NAV', 'BUTTON', 'SVG', 'FIGURE', 'FIGCAPTION'].includes(tag)) return;
-
-                if (tag === 'BR') {
-                    blocks.push('\n');
-                    return;
-                }
-
+                if (['SCRIPT','STYLE','NAV','BUTTON','SVG','FIGURE','FIGCAPTION'].includes(tag)) return;
+                if (tag === 'BR') { blocks.push('\n'); return; }
+                if (blockTags.has(tag) && tag.startsWith('H')) { blocks.push('\n\n# ' + node.textContent.trim()); return; }
+                if (tag === 'HR') { blocks.push('\n\n---\n\n'); return; }
                 const isBlock = blockTags.has(tag);
-                if (isBlock && tag.startsWith('H')) {
-                    blocks.push('\n\n# ' + node.textContent.trim());
-                    return;
-                }
-                if (tag === 'HR') {
-                    blocks.push('\n\n---\n\n');
-                    return;
-                }
-
                 if (isBlock) blocks.push('\n\n');
-                for (const child of node.childNodes) {
-                    walk(child);
-                }
+                for (const child of node.childNodes) walk(child);
                 if (isBlock) blocks.push('\n\n');
             }
-
             walk(element);
-
-            // Clean up excessive newlines
-            return blocks.join('')
-                .replace(/\n{3,}/g, '\n\n')
-                .replace(/^\n+|\n+$/g, '')
-                .trim();
+            return blocks.join('').replace(/\n{3,}/g, '\n\n').replace(/^\n+|\n+$/g, '').trim();
         }
 
-        // ─── Translation ───────────────────────────────
+        // ─── Translation ────────────────────────────
         window.translateAndSave = async function() {
             const originalText = document.getElementById('paste-input').value.trim();
             const title = document.getElementById('title-input').value.trim();
             const url = document.getElementById('url-input').value.trim();
-            const engine = document.getElementById('engine-select').value;
+            const engine = getSetting('engine', 'openai');
 
-            if (!originalText) {
-                showAlert('Zadejte nebo načtěte text příběhu k překladu.');
-                return;
-            }
-            if (!title) {
-                showAlert('Zadejte název příběhu.');
-                return;
-            }
+            if (!originalText) { showAlert('Zadejte nebo načtěte text příběhu k překladu.'); return; }
+            if (!title) { showAlert('Zadejte název příběhu.'); return; }
 
-            // Validate engine settings
             if (engine === 'openai') {
-                const apiKey = document.getElementById('apikey-input').value.trim();
-                if (!apiKey) {
-                    showAlert('Zadejte OpenAI API klíč pro překlad.');
-                    return;
-                }
-                saveApiKey(apiKey);
-            } else {
-                const email = document.getElementById('email-input').value.trim();
-                if (email) saveEmail(email);
+                const apiKey = getSetting('openai-key', '');
+                if (!apiKey) { showAlert('Zadejte OpenAI API klíč v Nastavení (ikona ozubeného kola).'); return; }
             }
 
             const translateBtn = document.getElementById('translate-btn');
@@ -1157,27 +743,20 @@
             progressArea.style.display = 'block';
 
             try {
-                let translatedContent;
+                const translatedContent = engine === 'openai'
+                    ? await translateWithOpenAi(originalText, progressFill, progressText)
+                    : await translateWithMyMemory(originalText, progressFill, progressText);
 
-                if (engine === 'openai') {
-                    translatedContent = await translateWithOpenAi(originalText, progressFill, progressText);
-                } else {
-                    translatedContent = await translateWithMyMemory(originalText, progressFill, progressText);
-                }
-
-                // Save article
+                const article = { id: generateId(), title, url, originalContent: originalText, translatedContent, dateAdded: new Date().toISOString() };
                 const articles = loadArticles();
-                articles.unshift({
-                    id: generateId(),
-                    title,
-                    url,
-                    originalContent: originalText,
-                    translatedContent,
-                    dateAdded: new Date().toISOString()
-                });
+                articles.unshift(article);
                 saveArticles(articles);
 
-                // Reset form
+                // Auto-save to Drive if connected
+                if (driveAccessToken) {
+                    try { await saveToDrive(); } catch (e) { /* silent fail, local save is enough */ }
+                }
+
                 resetAddForm();
                 showAlert('Příběh úspěšně přeložen a uložen!', 'success');
                 showView('library-view');
@@ -1192,7 +771,7 @@
             }
         };
 
-        // ─── OpenAI Translation ──────────────────────
+        // ─── OpenAI Translation ─────────────────────
         const OPENAI_SYSTEM_PROMPT = `You are a professional literary translator specializing in fantasy fiction. Translate the following English text into Czech.
 
 Rules:
@@ -1205,184 +784,116 @@ Rules:
 - Use appropriate Czech literary register, not colloquial language`;
 
         async function translateWithOpenAi(text, progressFill, progressText) {
-            const apiKey = document.getElementById('apikey-input').value.trim();
-
-            // Split text into batches of paragraphs (~3000 chars each for good context)
+            const apiKey = getSetting('openai-key', '');
             const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
             const MAX_BATCH_CHARS = 3000;
             const batches = [];
-            let currentBatch = [];
-            let currentLen = 0;
+            let currentBatch = [], currentLen = 0;
 
             for (const para of paragraphs) {
                 if (currentLen + para.length > MAX_BATCH_CHARS && currentBatch.length > 0) {
                     batches.push(currentBatch.join('\n\n'));
-                    currentBatch = [para];
-                    currentLen = para.length;
+                    currentBatch = [para]; currentLen = para.length;
                 } else {
-                    currentBatch.push(para);
-                    currentLen += para.length;
+                    currentBatch.push(para); currentLen += para.length;
                 }
             }
             if (currentBatch.length > 0) batches.push(currentBatch.join('\n\n'));
 
-            const translatedBatches = [];
+            const results = [];
             for (let i = 0; i < batches.length; i++) {
                 if (translationAborted) break;
-
-                const pct = Math.round(((i) / batches.length) * 100);
+                const pct = Math.round((i / batches.length) * 100);
                 progressFill.style.width = pct + '%';
                 progressText.textContent = `Překládám část ${i + 1} / ${batches.length} (${pct}%)...`;
-
-                const translated = await callOpenAi(batches[i], apiKey);
-                translatedBatches.push(translated);
+                results.push(await callOpenAi(batches[i], apiKey));
             }
-
             progressFill.style.width = '100%';
             progressText.textContent = 'Překlad dokončen!';
-            return translatedBatches.join('\n\n');
+            return results.join('\n\n');
         }
 
         async function callOpenAi(text, apiKey) {
             const resp = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: 'gpt-4o-mini',
-                    messages: [
-                        { role: 'system', content: OPENAI_SYSTEM_PROMPT },
-                        { role: 'user', content: text }
-                    ],
-                    temperature: 0.3
-                })
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'system', content: OPENAI_SYSTEM_PROMPT }, { role: 'user', content: text }], temperature: 0.3 })
             });
-
             if (!resp.ok) {
                 const err = await resp.json().catch(() => ({}));
-                if (resp.status === 401) {
-                    throw new Error('Neplatný OpenAI API klíč. Zkontrolujte klíč v nastavení.');
-                }
-                if (resp.status === 429) {
-                    throw new Error('Překročen limit OpenAI API. Zkuste to za chvíli znovu.');
-                }
+                if (resp.status === 401) throw new Error('Neplatný OpenAI API klíč. Zkontrolujte klíč v Nastavení.');
+                if (resp.status === 429) throw new Error('Překročen limit OpenAI API. Zkuste to za chvíli znovu.');
                 throw new Error(`OpenAI API chyba: ${err.error?.message || `HTTP ${resp.status}`}`);
             }
-
             const data = await resp.json();
             const content = data.choices?.[0]?.message?.content;
             if (!content) throw new Error('Prázdná odpověď z OpenAI.');
             return content.trim();
         }
 
-        // ─── MyMemory Translation ────────────────────
+        // ─── MyMemory Translation ───────────────────
         async function translateWithMyMemory(text, progressFill, progressText) {
-            const email = document.getElementById('email-input').value.trim();
+            const email = getSetting('mymemory-email', '');
             const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
             const translated = [];
-            let totalChars = text.length;
-            let doneChars = 0;
+            let totalChars = text.length, doneChars = 0;
 
             for (let i = 0; i < paragraphs.length; i++) {
                 if (translationAborted) break;
-
                 const para = paragraphs[i].trim();
                 if (!para) { translated.push(''); continue; }
+                if (/^[*\-_=~#]{1,5}\s*$/.test(para) || para === '---') { translated.push(para); doneChars += para.length; continue; }
 
-                if (/^[*\-_=~#]{1,5}\s*$/.test(para) || para === '---') {
-                    translated.push(para);
-                    doneChars += para.length;
-                    continue;
-                }
-
-                const translatedPara = await translateTextMyMemory(para, email);
-                translated.push(translatedPara);
-
+                translated.push(await translateTextMyMemory(para, email));
                 doneChars += para.length;
                 const pct = Math.round((doneChars / totalChars) * 100);
                 progressFill.style.width = pct + '%';
                 progressText.textContent = `Přeloženo ${i + 1} / ${paragraphs.length} odstavců (${pct}%)`;
-
                 if (i < paragraphs.length - 1) await sleep(300);
             }
-
             return translated.join('\n\n');
         }
 
         async function translateTextMyMemory(text, email) {
             const MAX_CHUNK = 480;
-            if (text.length <= MAX_CHUNK) {
-                return await callMyMemoryApi(text, email);
-            }
-
+            if (text.length <= MAX_CHUNK) return await callMyMemoryApi(text, email);
             const sentences = text.match(/[^.!?]+[.!?]+\s*/g) || [text];
-            const chunks = [];
-            let current = '';
-
-            for (const sentence of sentences) {
-                if ((current + sentence).length > MAX_CHUNK && current) {
-                    chunks.push(current.trim());
-                    current = sentence;
-                } else {
-                    current += sentence;
-                }
+            const chunks = []; let current = '';
+            for (const s of sentences) {
+                if ((current + s).length > MAX_CHUNK && current) { chunks.push(current.trim()); current = s; }
+                else current += s;
             }
             if (current.trim()) chunks.push(current.trim());
-
             const results = [];
-            for (const chunk of chunks) {
-                const result = await callMyMemoryApi(chunk, email);
-                results.push(result);
-                if (chunks.length > 1) await sleep(200);
-            }
-
+            for (const chunk of chunks) { results.push(await callMyMemoryApi(chunk, email)); if (chunks.length > 1) await sleep(200); }
             return results.join(' ');
         }
 
         async function callMyMemoryApi(text, email) {
             const params = new URLSearchParams({ q: text, langpair: 'en|cs' });
             if (email) params.set('de', email);
-
             const resp = await fetch(`https://api.mymemory.translated.net/get?${params}`);
             if (!resp.ok) throw new Error(`Translation API error: HTTP ${resp.status}`);
-
             const data = await resp.json();
-            if (data.responseStatus === 403) {
-                throw new Error('Denní limit překladu byl vyčerpán. Zkuste zadat e-mail pro vyšší limit, nebo použijte OpenAI engine.');
-            }
-
+            if (data.responseStatus === 403) throw new Error('Denní limit překladu vyčerpán. Použijte OpenAI engine nebo zadejte e-mail pro vyšší limit.');
             const translated = data.responseData?.translatedText;
             if (!translated) throw new Error('Prázdná odpověď z překladu.');
             return translated;
         }
 
-        // ─── Save without translation ──────────────────
+        // ─── Save without translation ───────────────
         window.saveOriginalOnly = function() {
             const originalText = document.getElementById('paste-input').value.trim();
             const title = document.getElementById('title-input').value.trim();
             const url = document.getElementById('url-input').value.trim();
-
-            if (!originalText) {
-                showAlert('Zadejte nebo načtěte text příběhu.');
-                return;
-            }
-            if (!title) {
-                showAlert('Zadejte název příběhu.');
-                return;
-            }
+            if (!originalText) { showAlert('Zadejte nebo načtěte text příběhu.'); return; }
+            if (!title) { showAlert('Zadejte název příběhu.'); return; }
 
             const articles = loadArticles();
-            articles.unshift({
-                id: generateId(),
-                title,
-                url,
-                originalContent: originalText,
-                translatedContent: '',
-                dateAdded: new Date().toISOString()
-            });
+            articles.unshift({ id: generateId(), title, url, originalContent: originalText, translatedContent: '', dateAdded: new Date().toISOString() });
             saveArticles(articles);
+
+            if (driveAccessToken) { saveToDrive().catch(() => {}); }
 
             resetAddForm();
             showAlert('Příběh uložen (bez překladu). Můžete jej přeložit později z knihovny.', 'success');
@@ -1397,7 +908,214 @@ Rules:
             document.getElementById('progress-area').style.display = 'none';
         }
 
-        // ─── Helpers ───────────────────────────────────
+        // ─── Google Drive ───────────────────────────
+        function isDriveConnected() { return !!driveAccessToken; }
+
+        function updateDriveStatusUI() {
+            const dot = document.getElementById('drive-status-dot');
+            const text = document.getElementById('drive-status-text');
+            const connectBtn = document.getElementById('drive-connect-btn');
+            const disconnectBtn = document.getElementById('drive-disconnect-btn');
+            const syncBtn = document.getElementById('drive-sync-btn');
+
+            if (driveAccessToken) {
+                dot.className = 'drive-status-dot connected';
+                text.textContent = 'Připojeno ke Google Drive';
+                connectBtn.style.display = 'none';
+                disconnectBtn.style.display = 'inline-block';
+                syncBtn.style.display = 'inline-block';
+            } else {
+                dot.className = 'drive-status-dot disconnected';
+                text.textContent = 'Nepřipojeno';
+                connectBtn.style.display = 'inline-block';
+                disconnectBtn.style.display = 'none';
+                syncBtn.style.display = 'none';
+            }
+        }
+
+        window.connectDrive = async function() {
+            const clientId = document.getElementById('google-client-id-input').value.trim() || getSetting('google-client-id', '');
+            if (!clientId) {
+                showAlert('Zadejte Google OAuth Client ID.');
+                return;
+            }
+            // Save it
+            setSetting('google-client-id', clientId);
+
+            if (typeof google === 'undefined' || !google.accounts?.oauth2) {
+                showAlert('Google Identity Services se nepodařilo načíst. Zkuste obnovit stránku.', 'error');
+                return;
+            }
+
+            const connectBtn = document.getElementById('drive-connect-btn');
+            connectBtn.disabled = true;
+            connectBtn.innerHTML = '<span class="spinner"></span>Připojuji...';
+
+            try {
+                await new Promise((resolve, reject) => {
+                    const tokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: clientId,
+                        scope: 'https://www.googleapis.com/auth/drive.file',
+                        callback: (response) => {
+                            if (response.error) { reject(new Error(response.error_description || response.error)); return; }
+                            driveAccessToken = response.access_token;
+                            resolve();
+                        },
+                        error_callback: (err) => {
+                            reject(new Error(err.message || 'OAuth chyba'));
+                        }
+                    });
+                    tokenClient.requestAccessToken();
+                });
+
+                driveFolderId = null; // Reset so it's found/created on next use
+                updateDriveStatusUI();
+                showAlert('Google Drive úspěšně připojen!', 'success');
+            } catch (err) {
+                showAlert(`Chyba při připojování: ${err.message}`);
+            } finally {
+                connectBtn.disabled = false;
+                connectBtn.textContent = 'Připojit Google Drive';
+            }
+        };
+
+        window.disconnectDrive = function() {
+            if (driveAccessToken) {
+                try { google.accounts.oauth2.revoke(driveAccessToken); } catch {}
+            }
+            driveAccessToken = null;
+            driveFolderId = null;
+            updateDriveStatusUI();
+            showAlert('Google Drive odpojen.', 'info');
+        };
+
+        async function ensureDriveFolder() {
+            if (driveFolderId) return driveFolderId;
+
+            // Search for existing folder
+            const query = "name='MTG Lore Translator' and mimeType='application/vnd.google-apps.folder' and trashed=false";
+            const searchResp = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`, {
+                headers: { 'Authorization': `Bearer ${driveAccessToken}` }
+            });
+            if (!searchResp.ok) throw new Error('Drive API chyba při hledání složky.');
+            const searchData = await searchResp.json();
+
+            if (searchData.files?.length > 0) {
+                driveFolderId = searchData.files[0].id;
+                return driveFolderId;
+            }
+
+            // Create folder
+            const createResp = await fetch('https://www.googleapis.com/drive/v3/files', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${driveAccessToken}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'MTG Lore Translator', mimeType: 'application/vnd.google-apps.folder' })
+            });
+            if (!createResp.ok) throw new Error('Nepodařilo se vytvořit složku na Drive.');
+            const folder = await createResp.json();
+            driveFolderId = folder.id;
+            return driveFolderId;
+        }
+
+        async function findDriveFile(folderId) {
+            const query = `name='mtg-lore-data.json' and '${folderId}' in parents and trashed=false`;
+            const resp = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`, {
+                headers: { 'Authorization': `Bearer ${driveAccessToken}` }
+            });
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            return data.files?.[0]?.id || null;
+        }
+
+        async function saveToDrive() {
+            if (!driveAccessToken) return;
+            const folderId = await ensureDriveFolder();
+            const articles = loadArticles();
+            const content = JSON.stringify(articles, null, 2);
+            const fileId = await findDriveFile(folderId);
+
+            const metadata = { name: 'mtg-lore-data.json', mimeType: 'application/json' };
+            const boundary = '---mtg_lore_boundary---';
+            const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`;
+
+            if (fileId) {
+                // Update existing
+                const resp = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${driveAccessToken}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
+                    body
+                });
+                if (!resp.ok) throw new Error('Nepodařilo se aktualizovat soubor na Drive.');
+            } else {
+                // Create new
+                metadata.parents = [folderId];
+                const newBody = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`;
+                const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${driveAccessToken}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
+                    body: newBody
+                });
+                if (!resp.ok) throw new Error('Nepodařilo se vytvořit soubor na Drive.');
+            }
+        }
+
+        async function loadFromDrive() {
+            if (!driveAccessToken) throw new Error('Drive nepřipojen.');
+            const folderId = await ensureDriveFolder();
+            const fileId = await findDriveFile(folderId);
+
+            if (!fileId) return { added: 0, message: 'Na Google Drive nejsou žádné uložené příběhy.' };
+
+            const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                headers: { 'Authorization': `Bearer ${driveAccessToken}` }
+            });
+            if (!resp.ok) throw new Error('Nepodařilo se stáhnout data z Drive.');
+            const driveArticles = await resp.json();
+
+            const localArticles = loadArticles();
+            const localIds = new Set(localArticles.map(a => a.id));
+            let added = 0;
+
+            for (const article of driveArticles) {
+                if (!localIds.has(article.id)) {
+                    localArticles.push(article);
+                    added++;
+                }
+            }
+
+            localArticles.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+            saveArticles(localArticles);
+            return { added };
+        }
+
+        window.syncDriveFromLibrary = async function() {
+            const syncBtn = document.getElementById('drive-sync-btn');
+            syncBtn.disabled = true;
+            syncBtn.innerHTML = '<span class="spinner"></span>Sync...';
+
+            try {
+                // First upload local to Drive
+                await saveToDrive();
+                // Then pull from Drive and merge
+                const result = await loadFromDrive();
+                // Upload merged state back
+                await saveToDrive();
+
+                renderLibrary();
+                if (result.added > 0) {
+                    showAlert(`Synchronizace dokončena. Přidáno ${result.added} příběhů z Drive.`, 'success');
+                } else {
+                    showAlert('Synchronizace dokončena. Vše je aktuální.', 'success');
+                }
+            } catch (err) {
+                showAlert(`Chyba při synchronizaci: ${err.message}`);
+            } finally {
+                syncBtn.disabled = false;
+                syncBtn.innerHTML = '&#9729; Drive sync';
+            }
+        };
+
+        // ─── Helpers ────────────────────────────────
         function escapeHtml(str) {
             const el = document.createElement('span');
             el.textContent = str;
@@ -1408,7 +1126,7 @@ Rules:
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        // ─── Init ──────────────────────────────────────
+        // ─── Init ───────────────────────────────────
         renderLibrary();
     })();
     </script>
